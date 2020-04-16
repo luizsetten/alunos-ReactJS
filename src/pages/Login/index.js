@@ -1,28 +1,58 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import { isEmail } from 'validator';
+import { useDispatch, useSelector } from 'react-redux';
+import { get } from 'lodash';
 
 import { Container } from '../../styles/GlobalStyles';
-import { Title, Paragrafo } from './styled';
-import * as exampleActions from '../../store/modules/example/actions';
+import { Form } from './styled';
+import * as actions from '../../store/modules/auth/actions';
+import Loading from '../../components/Loading';
 
-export default function Login() {
+export default function Login(props) {
   const dispatch = useDispatch();
 
-  function handleClick(e) {
-    e.preventDefault();
+  const prevPath = get(props, 'location.state.prevPath', '/');
+  const isLoading = useSelector(state => state.auth.isLoading);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-    dispatch(exampleActions.clicaBotaoRequest());
-  }
+  const handleSubmit = e => {
+    e.preventDefault();
+    let formErrors = false;
+
+    if (!isEmail(email)) {
+      formErrors = true;
+      toast.error('E-mail inválido.');
+    }
+    if (password.length < 6 || password.length > 50) {
+      formErrors = true;
+      toast.error('Senha inválida.');
+    }
+
+    dispatch(actions.loginRequest({ email, password, prevPath }));
+  };
+
   return (
     <Container>
-      <Title>
-        Hello world!
-        <small>Oie</small>
-      </Title>
-      <Paragrafo>Lorem ipsum dolor sit amet.</Paragrafo>
-      <button type="button" onClick={handleClick}>
-        Enviar
-      </button>
+      <Loading isLoading={isLoading} />
+
+      <h1>Login</h1>
+      <Form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="Seu e-mail"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Sua senha"
+        />
+        <button type="submit">Acessar</button>
+      </Form>
     </Container>
   );
 }
